@@ -5,3 +5,5 @@ urllib3
 flask
 opencv-python
 python-dotenv
+supabase
+twilio

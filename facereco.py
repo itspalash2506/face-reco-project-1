@@ -2,12 +2,24 @@ import cv2
 import numpy as np
 import os
 import imutils
-# import urllib.request
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from supabase import create_client, Client
+from notification_service import send_whatsapp_notification
+
+load_dotenv()
+
+supabase_url = os.getenv('SUPABASE_URL')
+supabase_key = os.getenv('SUPABASE_ANON_KEY')
+supabase: Client = create_client(supabase_url, supabase_key)
+
 size = 4
 haar_file = 'haarcascade_frontalface_default.xml'
 datasets = 'images'
 print('Training the model...')
-# url='http://192.168.202.230:8080/shot.jpg'
+
+notification_cooldown = {}
+
 (images, labels, names, id) = ([], [], {}, 0)
 for (subdirs, dirs, files) in os.walk(datasets):
     for subdir in dirs:
@@ -42,10 +54,53 @@ while True:
         prediction = model.predict(face_resize)
         cv2.rectangle(im, (x, y), (x + w, y + h), (0, 255, 0), 3)
         if prediction[1] < 800:
-            cv2.putText(im, '%s - %.0f' % (names[prediction[0]], prediction[1]), 
+            detected_name = names[prediction[0]]
+            cv2.putText(im, '%s - %.0f' % (detected_name, prediction[1]),
                         (x-10, y-10), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255))
-            print(names[prediction[0]])
+            print(detected_name)
             cnt = 0
+
+            current_time = datetime.now()
+            should_notify = True
+
+            if detected_name in notification_cooldown:
+                last_notification_time = notification_cooldown[detected_name]
+                if current_time - last_notification_time < timedelta(minutes=5):
+                    should_notify = False
+
+            if should_notify:
+                try:
+                    result = supabase.table('persons').select('*').eq('name', detected_name).execute()
+
+                    if result.data and len(result.data) > 0:
+                        person_data = result.data[0]
+                        phone_number = person_data.get('phone_number')
+                        email = person_data.get('email')
+
+                        if phone_number and email:
+                            notification_sent = send_whatsapp_notification(
+                                phone_number,
+                                detected_name,
+                                email
+                            )
+
+                            if notification_sent:
+                                supabase.table('persons').update({
+                                    'last_detected_at': current_time.isoformat(),
+                                    'notification_sent': True
+                                }).eq('name', detected_name).execute()
+
+                                notification_cooldown[detected_name] = current_time
+                                print(f"WhatsApp notification sent for {detected_name}")
+                            else:
+                                print(f"Failed to send notification for {detected_name}")
+                        else:
+                            print(f"Missing contact details for {detected_name}")
+                    else:
+                        print(f"No database record found for {detected_name}")
+
+                except Exception as e:
+                    print(f"Error sending notification: {str(e)}")
         else:
             cnt += 1
             cv2.putText(im, 'Unknown', (x-10, y-10), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0))

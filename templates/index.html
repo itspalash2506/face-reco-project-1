@@ -237,7 +237,15 @@
                 <label for="personName">Person Name</label>
                 <input type="text" id="personName" placeholder="Enter person's name" />
             </div>
-            <p class="info-text">Enter the name and click "Start Capture" to take 600 photos. Press 'Esc' when done.</p>
+            <div class="input-group">
+                <label for="personEmail">Email Address</label>
+                <input type="text" id="personEmail" placeholder="Enter email address" />
+            </div>
+            <div class="input-group">
+                <label for="personPhone">WhatsApp Phone Number</label>
+                <input type="text" id="personPhone" placeholder="+1234567890" />
+            </div>
+            <p class="info-text">Enter all details and click "Start Capture" to take 600 photos. Press 'Esc' when done.</p>
             <button class="btn btn-primary" id="captureBtn" onclick="startCapture()">Start Capture</button>
             <div id="captureMessage"></div>
         </div>
@@ -265,11 +273,28 @@
 
         async function startCapture() {
             const name = document.getElementById('personName').value.trim();
+            const email = document.getElementById('personEmail').value.trim();
+            const phone = document.getElementById('personPhone').value.trim();
             const messageDiv = document.getElementById('captureMessage');
             const btn = document.getElementById('captureBtn');
 
             if (!name) {
                 showMessage(messageDiv, 'Please enter a person name', 'error');
+                return;
+            }
+
+            if (!email) {
+                showMessage(messageDiv, 'Please enter an email address', 'error');
+                return;
+            }
+
+            if (!phone) {
+                showMessage(messageDiv, 'Please enter a WhatsApp phone number', 'error');
+                return;
+            }
+
+            if (!phone.startsWith('+')) {
+                showMessage(messageDiv, 'Phone number must start with + and country code (e.g., +1234567890)', 'error');
                 return;
             }
 
@@ -282,7 +307,11 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ name: name })
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        phone_number: phone
+                    })
                 });
 
                 const data = await response.json();
@@ -290,6 +319,9 @@
                 if (data.success) {
                     showMessage(messageDiv, data.message + '. Camera window opened. Press Esc when 600 photos are captured.', 'success');
                     setTimeout(() => loadPersons(), 1000);
+                    document.getElementById('personName').value = '';
+                    document.getElementById('personEmail').value = '';
+                    document.getElementById('personPhone').value = '';
                 } else {
                     showMessage(messageDiv, data.message, 'error');
                 }

@@ -3,10 +3,18 @@ import subprocess
 import os
 import signal
 import cv2
+from dotenv import load_dotenv
+from supabase import create_client, Client
+
+load_dotenv()
 
 app = Flask(__name__)
 
 current_process = None
+
+supabase_url = os.getenv('SUPABASE_URL')
+supabase_key = os.getenv('SUPABASE_ANON_KEY')
+supabase: Client = create_client(supabase_url, supabase_key)
 
 @app.route('/')
 def index():
@@ -18,11 +26,33 @@ def capture():
 
     data = request.json
     person_name = data.get('name', '').strip()
+    email = data.get('email', '').strip()
+    phone_number = data.get('phone_number', '').strip()
 
     if not person_name:
         return jsonify({'success': False, 'message': 'Person name is required'})
 
+    if not email:
+        return jsonify({'success': False, 'message': 'Email is required'})
+
+    if not phone_number:
+        return jsonify({'success': False, 'message': 'Phone number is required'})
+
     try:
+        existing = supabase.table('persons').select('*').eq('name', person_name).execute()
+
+        if existing.data:
+            supabase.table('persons').update({
+                'email': email,
+                'phone_number': phone_number
+            }).eq('name', person_name).execute()
+        else:
+            supabase.table('persons').insert({
+                'name': person_name,
+                'email': email,
+                'phone_number': phone_number
+            }).execute()
+
         with open('imagecapture.py', 'r') as file:
             content = file.read()
 
