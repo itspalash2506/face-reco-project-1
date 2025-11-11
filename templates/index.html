@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            color: #2d3748;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        .btn-stop {
+            background: #e53e3e;
+            color: white;
+            margin-top: 16px;
+        }
+
+        .btn-stop:hover {
+            background: #c53030;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(229, 62, 62, 0.4);
+        }
+
+        .message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.success {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .message.error {
+            background-color: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .persons-list {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .person-item {
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #2d3748;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .person-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-text {
+            color: #718096;
+            font-size: 13px;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Face Recognition System</h1>
+        <p class="subtitle">Register and recognize faces</p>
+
+        <div class="section">
+            <h2 class="section-title">1. Register New Person</h2>
+            <div class="input-group">
+                <label for="personName">Person Name</label>
+                <input type="text" id="personName" placeholder="Enter person's name" />
+            </div>
+            <p class="info-text">Enter the name and click "Start Capture" to take 600 photos. Press 'Esc' when done.</p>
+            <button class="btn btn-primary" id="captureBtn" onclick="startCapture()">Start Capture</button>
+            <div id="captureMessage"></div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">2. Recognize Faces</h2>
+            <p class="info-text">Start the recognition system to identify registered persons. Press 'Esc' to stop.</p>
+            <button class="btn btn-secondary" id="recognizeBtn" onclick="startRecognition()">Start Recognition</button>
+            <div id="recognizeMessage"></div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Registered Persons</h2>
+            <button class="btn btn-primary" onclick="loadPersons()" style="font-size: 13px; padding: 10px;">Refresh List</button>
+            <div id="personsList"></div>
+        </div>
+
+        <button class="btn btn-stop" onclick="stopProcess()">Stop Current Process</button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            loadPersons();
+        };
+
+        async function startCapture() {
+            const name = document.getElementById('personName').value.trim();
+            const messageDiv = document.getElementById('captureMessage');
+            const btn = document.getElementById('captureBtn');
+
+            if (!name) {
+                showMessage(messageDiv, 'Please enter a person name', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = 'Starting...<span class="loading"></span>';
+
+            try {
+                const response = await fetch('/capture', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: name })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(messageDiv, data.message + '. Camera window opened. Press Esc when 600 photos are captured.', 'success');
+                    setTimeout(() => loadPersons(), 1000);
+                } else {
+                    showMessage(messageDiv, data.message, 'error');
+                }
+            } catch (error) {
+                showMessage(messageDiv, 'Error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Start Capture';
+            }
+        }
+
+        async function startRecognition() {
+            const messageDiv = document.getElementById('recognizeMessage');
+            const btn = document.getElementById('recognizeBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = 'Starting...<span class="loading"></span>';
+
+            try {
+                const response = await fetch('/recognize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(messageDiv, data.message + '. Camera window opened. Press Esc to stop.', 'success');
+                } else {
+                    showMessage(messageDiv, data.message, 'error');
+                }
+            } catch (error) {
+                showMessage(messageDiv, 'Error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Start Recognition';
+            }
+        }
+
+        async function stopProcess() {
+            try {
+                const response = await fetch('/stop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                alert(data.message);
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function loadPersons() {
+            const listDiv = document.getElementById('personsList');
+
+            try {
+                const response = await fetch('/get_persons');
+                const data = await response.json();
+
+                if (data.success && data.persons.length > 0) {
+                    listDiv.innerHTML = '<div class="persons-list">' +
+                        data.persons.map(person => `<div class="person-item">${person}</div>`).join('') +
+                        '</div>';
+                } else {
+                    listDiv.innerHTML = '<p class="info-text" style="margin-top: 12px;">No persons registered yet</p>';
+                }
+            } catch (error) {
+                listDiv.innerHTML = '<p class="info-text" style="margin-top: 12px; color: #e53e3e;">Error loading persons</p>';
+            }
+        }
+
+        function showMessage(element, message, type) {
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

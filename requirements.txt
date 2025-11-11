@@ -1,0 +1,7 @@
+opencv-contrib-python
+numpy
+imutils
+urllib3
+flask
+opencv-python
+python-dotenv
